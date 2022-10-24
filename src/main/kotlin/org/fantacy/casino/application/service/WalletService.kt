@@ -2,12 +2,16 @@ package org.fantacy.casino.application.service
 
 import org.fantacy.casino.domain.Account
 import org.fantacy.casino.domain.AccountBalanceDTO
+import org.fantacy.casino.domain.AccountBalanceDocument
 import org.fantacy.casino.domain.AccountBalanceQuery
 import org.fantacy.casino.domain.AccountRepository
 import org.fantacy.casino.domain.CreateAccountCommand
 import org.fantacy.casino.domain.CreateAccountDocument
 import org.fantacy.casino.domain.CreditAccountCommand
+import org.fantacy.casino.domain.CreditAccountDocument
 import org.fantacy.casino.domain.DebitAccountCommand
+import org.fantacy.casino.domain.DebitAccountDocument
+import org.fantacy.casino.domain.ListTransactionsDocument
 import org.fantacy.casino.domain.ListTransactionsQuery
 import org.fantacy.casino.domain.Transaction
 import org.fantacy.casino.domain.TransactionDTO
@@ -27,19 +31,19 @@ class WalletService(
         return CreateAccountDocument(account.id!!)
     }
 
-    fun accountBalance(query: AccountBalanceQuery): List<AccountBalanceDTO> {
+    fun accountBalance(query: AccountBalanceQuery): AccountBalanceDocument {
         val accounts = accountRepository.findByPlayerUid(query.playerUid)
 
-        return accounts.map({ account ->
+        return AccountBalanceDocument(accounts.map({ account ->
             transactionRepository.findFirstByAccountOrderByIdDesc(account)
         }).filterNotNull()
             .map { transaction ->
                 AccountBalanceDTO(transaction.account.id!!, transaction.balanceAfter)
-            }
+            })
     }
 
     // add money
-    fun creditAccount(command: CreditAccountCommand): AccountBalanceDTO {
+    fun creditAccount(command: CreditAccountCommand): CreditAccountDocument {
         val account = accountRepository.getById(command.account)
         val lastTransaction = transactionRepository.findFirstByAccountOrderByIdDesc(account)
 
@@ -55,11 +59,11 @@ class WalletService(
 
         transactionRepository.saveAndFlush(transaction)
 
-        return AccountBalanceDTO(account.id!!, transaction.balanceAfter)
+        return CreditAccountDocument(AccountBalanceDTO(account.id!!, transaction.balanceAfter))
     }
 
     // remove money
-    fun debitAccount(command: DebitAccountCommand): AccountBalanceDTO {
+    fun debitAccount(command: DebitAccountCommand): DebitAccountDocument {
         val account = accountRepository.getById(command.account)
         val lastTransaction = transactionRepository.findFirstByAccountOrderByIdDesc(account)
 
@@ -75,21 +79,21 @@ class WalletService(
 
         transactionRepository.saveAndFlush(transaction)
 
-        return AccountBalanceDTO(account.id!!, transaction.balanceAfter)
+        return DebitAccountDocument(AccountBalanceDTO(account.id!!, transaction.balanceAfter))
     }
 
-    fun listTransactions(query: ListTransactionsQuery): List<TransactionDTO> {
+    fun listTransactions(query: ListTransactionsQuery): ListTransactionsDocument {
         val accounts = accountRepository.findByPlayerUid(query.playerUid)
 
-        return accounts.flatMap({ account ->
+        return ListTransactionsDocument(accounts.flatMap({ account ->
             transactionRepository.findByAccount(account)
         }).map { transaction ->
-        TransactionDTO(
-            transaction.account.id!!,
-            transaction.direction,
-            transaction.externalUid,
-            transaction.amount
-        )
-    }
+            TransactionDTO(
+                transaction.account.id!!,
+                transaction.direction,
+                transaction.externalUid,
+                transaction.amount
+            )
+        })
     }
 }

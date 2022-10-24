@@ -12,10 +12,18 @@ data class AccountBalanceQuery(
     val playerUid: String
 )
 
+data class AccountBalanceDocument(
+    val balances: List<AccountBalanceDTO>
+)
+
 data class CreditAccountCommand(
     val account: Long,
     val amount: Double,
     val externalUid: String
+)
+
+data class CreditAccountDocument(
+    val details: AccountBalanceDTO
 )
 
 data class DebitAccountCommand(
@@ -24,8 +32,16 @@ data class DebitAccountCommand(
     val externalUid: String
 )
 
+data class DebitAccountDocument(
+    val details: AccountBalanceDTO
+)
+
 data class ListTransactionsQuery(
     val playerUid: String
+)
+
+data class ListTransactionsDocument(
+    val transactions: List<TransactionDTO>
 )
 
 data class AccountBalanceDTO(val account: Long, val balance: Double)
