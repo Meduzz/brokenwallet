@@ -13,7 +13,7 @@ import javax.persistence.Table
 import javax.persistence.UniqueConstraint
 
 @Entity
-@Table(indexes = [Index(name = "playerUid_idx", columnList = "player_uid", unique = false)])
+@Table
 data class Account(
     @Id
     @GeneratedValue(strategy = IDENTITY)
@@ -23,11 +23,7 @@ data class Account(
 )
 
 @Entity
-@Table(
-    uniqueConstraints = [
-        UniqueConstraint(name = "account_externalUid_unq", columnNames = ["account_id", "external_uid"])
-    ]
-)
+@Table
 data class Transaction(
     @Id
     @GeneratedValue(strategy = IDENTITY)
